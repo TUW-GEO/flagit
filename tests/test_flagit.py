@@ -8,7 +8,7 @@ print(os.getcwd())
 def load_data():
     ancillary_path = os.path.abspath(os.path.join(os.getcwd(),'test_data'))
     os.chdir(ancillary_path)
-    return pd.read_pickle('./df_v2.pkl')
+    return pd.read_pickle('./df_v3.pkl')
 
 
 df = load_data()
@@ -79,25 +79,25 @@ def test_check_d06():
     np.testing.assert_almost_equal(df.deriv2[29], -6.200000000000003)
     assert df.qflag[30] == {9}
     assert df.qflag[29] == set()
-#
-# def test_check_d07():
-#     reset_qflags()
-#     get_D07()
-#     assert df.qflag[40] == {10}
-#     assert df.qflag[41] == set()
-#     assert df.qflag[60] == {11}
-#     assert df.qflag[61] == set()
-#
-#
-# def test_check_d09():
-#     get_D09()
-#     assert df.qflag[41] == {12}
-#     assert df.qflag[39] == set()
-#
-# def test_check_d10():
-#     get_D10()
-#     assert df.qflag[99] == {13}
-#     assert df.qflag[75] == set()
+
+def test_check_d07():
+    reset_qflags()
+    flag.flag_d07(df)
+    assert df.qflag[40] == {10}
+    assert df.qflag[41] == set()
+    assert df.qflag[60] == {11}
+    assert df.qflag[61] == set()
+
+
+def test_check_d09():
+    flag.flag_d09(df)
+    assert df.qflag[41] == {12}
+    assert df.qflag[39] == set()
+
+def test_check_d10():
+    flag.flag_d10(df)
+    assert df.qflag[99] == {13}
+    assert df.qflag[75] == set()
 
 
 if __name__ == '__main__':
@@ -110,6 +110,6 @@ if __name__ == '__main__':
     test_check_d04()
     test_check_d05()
     test_check_d06()
-    # test_check_d07()
-    # test_check_d09()
-    # test_check_d10()
+    test_check_d07()
+    test_check_d09()
+    test_check_d10()
