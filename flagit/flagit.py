@@ -9,12 +9,15 @@ import pandas as pd
 import numpy as np
 from scipy.signal import savgol_filter as savgol
 from functools import reduce
+import warnings
 
 
-def flagit(df):
+
+
+def flagit(df, hwsd=None):
     flag_c01(df)
     flag_c02(df)
-    flag_c03(df)
+    flag_c03(df, hwsd)
     flag_d01(df)
     flag_d02(df)
     flag_d03(df)  # D5 included
@@ -24,7 +27,7 @@ def flagit(df):
     flag_d07(df)  # D8 included
     flag_d09(df)
     flag_d10(df)
-    #flag_g(df)
+    flag_g(df)
     return df
 
 
@@ -36,11 +39,27 @@ def apply_savgol(df):
     df['deriv2'] = savgol(df.soil_moisture, 3, 2, 2, mode='nearest')
 
 
-def check_savgol(df):
-    if 'deriv1' not in df.columns or 'deriv2' not in df.columns:
-        apply_savgol(df)
+
+def hourly_check(function):
+    def hourly(df, *args):
+        if not pd.infer_freq(df.index) == 'H':
+            warnings.warn('Flags were developed for hourly data.')
+        if not args:
+            return function(df)
+        else:
+            return function(df, *args)
+    return hourly
 
 
+def savgol_check(function):
+    def add_deriv_to_dataframe(df):
+        if 'deriv1' not in df.columns or 'deriv2' not in df.columns:
+            apply_savgol()
+        function(df)
+    return add_deriv_to_dataframe
+
+
+@hourly_check
 def flag_c01(df):
     """
     Lower Boundary - flags when measurement is below threshold
@@ -51,6 +70,8 @@ def flag_c01(df):
         df['qflag'][index].apply(lambda x: x.add(1))
 
 
+
+@hourly_check
 def flag_c02(df):
     """
     Upper Boundary - flags when measurement is above threshold
@@ -61,6 +82,7 @@ def flag_c02(df):
         df['qflag'][index].apply(lambda x: x.add(2))
 
 
+@hourly_check
 def flag_c03(df, hwsd=None):
     """
     HWSD Saturation Point - flags when measurment is above saturation point (at the station location)
@@ -72,7 +94,7 @@ def flag_c03(df, hwsd=None):
     if len(index):
         df['qflag'][index].apply(lambda x: x.add(3))
 
-
+@hourly_check
 def flag_d01(df):
     """
     In situ Soil Temperature - flags when in situ soil temperature is below 0 degrees celsius
@@ -83,7 +105,7 @@ def flag_d01(df):
         if len(index):
             df['qflag'][index].apply(lambda x: x.add(4))
 
-
+@hourly_check
 def flag_d02(df):
     """
     In situ Air Temperature - flags when in situ air temperature is below 0 degrees celsius
@@ -95,6 +117,7 @@ def flag_d02(df):
             df['qflag'][index].apply(lambda x: x.add(5))
 
 
+@hourly_check
 def flag_d03(df):
     """
     Gldas soil temperature
@@ -106,6 +129,7 @@ def flag_d03(df):
             df['qflag'][index].apply(lambda x: x.add(6))
 
 
+@hourly_check
 def flag_d04(df):
     """
     This flag was designed for surface soil moisture, sensors at depths greater than 10cm behave differently.
@@ -129,12 +153,12 @@ def flag_d04(df):
         df['rise24h'] = df['soil_moisture'].diff(24)
         df['rise1h'] = df['soil_moisture'].diff(1)
 
-        index = df[(df['rise1h'] > 0) & (df['rise24h'] > df['std_x2']) & 
+        index = df[(df['rise1h'] > 0) & (df['rise24h'] > df['std_x2']) &
                    (df['total_precipitation'] < min_precipitation)].index
 
         df['qflag'][index].apply(lambda x: x.add(7))
 
-
+@hourly_check
 def flag_d05(df):
     """
     Should only be applied to surface soil moisture sensors (<= 10cm sensor depth)
@@ -161,7 +185,8 @@ def flag_d05(df):
         if len(index):
             df['qflag'][index].apply(lambda x: x.add(8))
 
-
+@hourly_check
+@savgol_check
 def flag_d06(df):
     """
     Checks if time-series shows a spike.
@@ -176,7 +201,6 @@ def flag_d06(df):
     observations that fulfill these criteria are found (index), and the dataframe is flagged at these instances.
     5. additional criteria drop to zero with a delta of 5
     """
-    check_savgol(df)
 
     def rolling_var(x):
         """
@@ -220,6 +244,8 @@ def flag_d06(df):
     df['qflag'][index].apply(lambda x: x.add(9))
 
 
+@hourly_check
+@savgol_check
 def flag_d07(df):
     """
     Checks if time-series shows a break.
@@ -232,7 +258,7 @@ def flag_d07(df):
      postive (negative) value at t+1.
     4. Additional criteria not in VJZ paper: Jump from above 0.05m³/m³ to Zero
     """
-    check_savgol(df)
+
     df['delta'] = df['soil_moisture'] - df['soil_moisture'].shift(1)  # remove abs on 16.10.2019 - like idl
     df['criteria1'] = abs(df['delta'].div(df['soil_moisture']))
     df['criteria2'] = abs(df['deriv1'].rolling(min_periods=5, window=25, center=True).mean() * 10)
@@ -242,7 +268,7 @@ def flag_d07(df):
     # Include jumps to zero!
     df['criteria4'] = (abs(df['delta']) > 5) & (df['soil_moisture'] == 0)  # new constraint not included in vzj paper
 
-    index = df[(df['criteria1'] > 0.1) & (abs(df['delta']) > 1) & (df['soil_moisture'] != 0) & 
+    index = df[(df['criteria1'] > 0.1) & (abs(df['delta']) > 1) & (df['soil_moisture'] != 0) &
                (abs(df['deriv1']) > df['criteria2']) & (df['criteria3'] == 1) & (df['deriv2'] != 0) &
                (df['criteria3a'] > 10)].index
 
@@ -258,6 +284,7 @@ def flag_d07(df):
         df['qflag'][index_pos].apply(lambda x: x.add(11))
 
 
+@hourly_check
 def flag_d09(df):
     """
     Low Plateau
@@ -274,7 +301,6 @@ def flag_d09(df):
     results features sequences of 1 for Events and df.end extends these sequences to at least 12h periods.
     """
     df.dropna(subset=['soil_moisture'], inplace=True)
-
     df['var_coeff'] = round(df['soil_moisture'].rolling(min_periods=13, window=13).var().shift(-12), 4) / \
                       round(df['soil_moisture'].rolling(min_periods=13, window=13).mean().shift(-12), 4)
 
@@ -284,21 +310,28 @@ def flag_d09(df):
     # if a neg. break occurs (D07) flagged until coefficient of variation is over 0.001, +11h (D09 minimum)
     def change_filter(u, l, v):
         return reduce(lambda x, y: x + [max(min(x[-1] + y, u), l)], v, [0])[1:]
-
     df['event'] = ((df['qflag'].astype(str)).str.contains('10') & (df['var_coeff'] < 0.001))
     df['event'].replace(np.nan, 0, inplace=True)
     df['event'] = df['event'].astype(int)
     df.loc[(df[['var_coeff']].max(1).diff() > 0.001) & (df['event'] == 0), 'event'] = -1
     df['result'] = change_filter(1, 0, df['event'].values)
+
     df['end'] = df['result'].rolling(min_periods=13, window=13).max()  # flag is at least 12h + 1h
 
     index = df[df['end'] > 0.0].index
+
+
     if len(index):
         df['qflag'][index].apply(lambda x: x.add(12))
 
-    df = df.resample('H').asfreq()
 
 
+
+
+
+
+@hourly_check
+@savgol_check
 def flag_d10(df):
     """
     Saturated Plateau
@@ -313,7 +346,7 @@ def flag_d10(df):
     end of plv) are above 0.95% of the previous highest soil moisture value ever detected (highest_sm).
 
     """
-    check_savgol(df)
+
     global d10group
     d10group = 0
     highest_sm = df['soil_moisture'][df['soil_moisture'] < 60].max()
@@ -364,12 +397,22 @@ def flag_d10(df):
         plateau = df['soil_moisture'].loc[emp:fin]
         if plateau.mean() > (highest_sm * 0.95):
             index.extend(plateau.index)
+    df = df.resample('H').asfreq()
 
     df['qflag'][index].apply(lambda x: x.add(13))
 
-    df =  df.resample('H').asfreq()
+
+
+
+def flag_g(df):
+    """
+    Applies flag 14 for 'good' to all unflagged observations
+    """
+    index_good = df[df['qflag'] == set()].index
+    df['qflag'][index_good].apply(lambda x: x.add(14))
     
 
 if __name__ == '__main__':
     dataframe = pd.read_pickle('df_v3.pkl')
     dataframe_flagged = flagit(dataframe)
+

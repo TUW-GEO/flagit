@@ -10,7 +10,6 @@ def load_data():
     os.chdir(ancillary_path)
     return pd.read_pickle('./df_v3.pkl')
 
-
 df = load_data()
 
 def check_run_flags():
@@ -95,9 +94,14 @@ def test_check_d09():
     assert df.qflag[39] == set()
 
 def test_check_d10():
+    #print(f'begin of d10 {df[df["soil_moisture"].isna()]}, freq= {pd.infer_freq(df.index)}')
     flag.flag_d10(df)
     assert df.qflag[99] == {13}
     assert df.qflag[75] == set()
+
+def test_check_good():
+    flag.flag_g(df)
+    assert df.qflag[3] == {14}
 
 
 if __name__ == '__main__':
@@ -113,3 +117,4 @@ if __name__ == '__main__':
     test_check_d07()
     test_check_d09()
     test_check_d10()
+    test_check_good()
