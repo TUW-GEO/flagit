@@ -12,23 +12,8 @@ from functools import reduce
 import warnings
 
 
-
-
-def flagit(df, hwsd=None):
-    flag_c01(df)
-    flag_c02(df)
-    flag_c03(df, hwsd)
-    flag_d01(df)
-    flag_d02(df)
-    flag_d03(df)  # D5 included
-    flag_d04(df)
-    flag_d05(df)
-    flag_d06(df)
-    flag_d07(df)  # D8 included
-    flag_d09(df)
-    flag_d10(df)
-    flag_g(df)
-    return df
+class FormatError(Exception):
+    pass
 
 
 def apply_savgol(df):
@@ -37,7 +22,7 @@ def apply_savgol(df):
     """
     df['deriv1'] = savgol(df.soil_moisture, 3, 2, 1, mode='nearest')
     df['deriv2'] = savgol(df.soil_moisture, 3, 2, 2, mode='nearest')
-
+    return df
 
 
 def hourly_check(function):
@@ -54,8 +39,8 @@ def hourly_check(function):
 def savgol_check(function):
     def add_deriv_to_dataframe(df):
         if 'deriv1' not in df.columns or 'deriv2' not in df.columns:
-            apply_savgol()
-        function(df)
+            df = apply_savgol(df)
+        return function(df)
     return add_deriv_to_dataframe
 
 
@@ -68,7 +53,7 @@ def flag_c01(df):
     index = df[df.soil_moisture < low_boundary].index
     if len(index):
         df['qflag'][index].apply(lambda x: x.add(1))
-
+    return df
 
 
 @hourly_check
@@ -80,6 +65,7 @@ def flag_c02(df):
     index = df[df.soil_moisture > upper_boundary].index
     if len(index):
         df['qflag'][index].apply(lambda x: x.add(2))
+    return df
 
 
 @hourly_check
@@ -88,11 +74,13 @@ def flag_c03(df, hwsd=None):
     HWSD Saturation Point - flags when measurment is above saturation point (at the station location)
     """
     if not hwsd:
-        return
+        return df
 
     index = df.loc[df.soil_moisture > hwsd].index
     if len(index):
         df['qflag'][index].apply(lambda x: x.add(3))
+    return df
+
 
 @hourly_check
 def flag_d01(df):
@@ -104,6 +92,8 @@ def flag_d01(df):
         index = df[df.soil_temperature < 0].index
         if len(index):
             df['qflag'][index].apply(lambda x: x.add(4))
+    return df
+
 
 @hourly_check
 def flag_d02(df):
@@ -115,6 +105,7 @@ def flag_d02(df):
         index = df[df['air_temperature'] < 0].index
         if len(index):
             df['qflag'][index].apply(lambda x: x.add(5))
+    return df
 
 
 @hourly_check
@@ -127,6 +118,7 @@ def flag_d03(df):
         index = df[df['gldas_soil_temperature'] < 0].index
         if len(index):
             df['qflag'][index].apply(lambda x: x.add(6))
+    return df
 
 
 @hourly_check
@@ -157,6 +149,8 @@ def flag_d04(df):
                    (df['total_precipitation'] < min_precipitation)].index
 
         df['qflag'][index].apply(lambda x: x.add(7))
+    return df
+
 
 @hourly_check
 def flag_d05(df):
@@ -184,6 +178,8 @@ def flag_d05(df):
 
         if len(index):
             df['qflag'][index].apply(lambda x: x.add(8))
+    return df
+
 
 @hourly_check
 @savgol_check
@@ -242,6 +238,7 @@ def flag_d06(df):
     index = df[(df.spike > 0) | ((df.spike.shift(1) > 0) & (df['spike_2h'] > 0))].index  # last expression for 2h spikes
 
     df['qflag'][index].apply(lambda x: x.add(9))
+    return df
 
 
 @hourly_check
@@ -282,6 +279,7 @@ def flag_d07(df):
         df['qflag'][index_neg].apply(lambda x: x.add(10))
     if len(index_pos):
         df['qflag'][index_pos].apply(lambda x: x.add(11))
+    return df
 
 
 @hourly_check
@@ -302,7 +300,7 @@ def flag_d09(df):
     """
     df.dropna(subset=['soil_moisture'], inplace=True)
     df['var_coeff'] = round(df['soil_moisture'].rolling(min_periods=13, window=13).var().shift(-12), 4) / \
-                      round(df['soil_moisture'].rolling(min_periods=13, window=13).mean().shift(-12), 4)
+        round(df['soil_moisture'].rolling(min_periods=13, window=13).mean().shift(-12), 4)
 
     nan_index = df[df['var_coeff'].isna() & (df['soil_moisture'] == 0)].index
     df.at[nan_index, 'var_coeff'] = 0.0
@@ -320,14 +318,9 @@ def flag_d09(df):
 
     index = df[df['end'] > 0.0].index
 
-
     if len(index):
         df['qflag'][index].apply(lambda x: x.add(12))
-
-
-
-
-
+    return df.resample('H').asfreq()
 
 
 @hourly_check
@@ -397,11 +390,9 @@ def flag_d10(df):
         plateau = df['soil_moisture'].loc[emp:fin]
         if plateau.mean() > (highest_sm * 0.95):
             index.extend(plateau.index)
-    df = df.resample('H').asfreq()
 
     df['qflag'][index].apply(lambda x: x.add(13))
-
-
+    return df.resample('H').asfreq()
 
 
 def flag_g(df):
@@ -410,9 +401,30 @@ def flag_g(df):
     """
     index_good = df[df['qflag'] == set()].index
     df['qflag'][index_good].apply(lambda x: x.add(14))
-    
+    return df
+
+
+def flagit(df, hwsd=None):
+    if not type(df) == pd.DataFrame or 'soil_moisture' not in df.columns or 'qflag' not in df.columns:
+        raise FormatError('\n\nInput data needs to be a pandas.DataFrame with columns "soil_moisture" and '
+                                    '"qflag" \noptional columns: "soil_temperature", "air_temperature", "percipitation", '
+                                    '"gldas_soil_temperature", "gldas_precipitation"')
+    df = flag_c01(df)
+    df = flag_c02(df)
+    df = flag_c03(df, hwsd)
+    df = flag_d01(df)
+    df = flag_d02(df)
+    df = flag_d03(df)  # D5 included
+    df = flag_d04(df)
+    df = flag_d05(df)
+    df = flag_d06(df)
+    df = flag_d07(df)  # D8 included
+    df = flag_d09(df)
+    df = flag_d10(df)
+    df = flag_g(df)
+    return df
+
 
 if __name__ == '__main__':
     dataframe = pd.read_pickle('df_v3.pkl')
     dataframe_flagged = flagit(dataframe)
-
