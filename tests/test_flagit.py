@@ -1,141 +1,152 @@
-import flagit.flagit as flag
+from src.flagit import flagit
 import numpy as np
 import pandas as pd
 import os
+import unittest
 
 
-def load_data():
-    ancillary_path = os.path.abspath(os.path.join(os.getcwd(),'tests','test_data'))
-    os.chdir(ancillary_path)
-    return pd.read_pickle('./df_v3.pkl')
+class TestInterface(unittest.TestCase):
+    def setUp(self):
+        """
+        Read pandas.DataFrame from file and setting up of interface object
+        """
+        self.ancillary_path = os.path.join(os.path.dirname(__file__))
+        self.data = pd.read_pickle(os.path.join(self.ancillary_path,
+                                                './test_data/test_DataFrame.pkl'))
+        self.iface = flagit.Interface(data=self.data, sat_point=42.7)
 
-df = load_data()
+    def test_init(self) -> None:
+        """
+        Test if FormatError is raised
+        """
+        self.data.drop(['soil_moisture'], axis=1, inplace=True)
+        with self.assertRaises(flagit.FormatError):
+            flagit.Interface(data=self.data)
 
-def test_run_flags():
-    reset_qflags()
-    flag.flagit(df, 42.7)
-    assert df.soil_moisture[10] == 5.1
-    assert df.index[2] == pd.Timestamp('2017-01-27 02:00:00'), 'Error reading data'
-    assert df.qflag[30] == {1, 4, 5, 6, 9}
-    assert df.qflag[40] == {4, 5, 6, 10, 12}
-    assert df.qflag[62] == {4, 6}
-    assert df.qflag[69] == {4, 5, 6}
-    assert df.qflag[70] == {2, 3, 4, 5, 6, 7, 8}
-    assert df.qflag[99] == {3, 4, 5, 6, 13}
-    assert df.qflag[136] == {6, 7, 8}
-    assert df.qflag[636] == {14}
-    np.testing.assert_almost_equal(df.deriv1[58], -5.551115123125783e-17)
-    np.testing.assert_almost_equal(df.deriv2[29], -6.200000000000003)
-    assert len(df) == 695
-    assert len(df.keys()) == 29
+    def test_run_flags(self) -> None:
+        """
+        Test application of ISMN quality control - all flags applied
+        """
+        df = self.iface.run()
+        assert self.data.soil_moisture[10] == 5.1
+        assert self.data.index[2] == pd.Timestamp('2017-01-27 02:00:00'), 'Error reading data'
+        assert self.data.qflag[30] == {'C01', 'D01', 'D02', 'D03', 'D06'}
+        assert self.data.qflag[40] == {'D01', 'D02', 'D03', 'D07', 'D09'}
+        assert self.data.qflag[62] == {'D01', 'D03'}
+        assert self.data.qflag[69] == {'D01', 'D02', 'D03'}
+        assert self.data.qflag[70] == {'C02', 'C03', 'D01', 'D02', 'D03', 'D04', 'D05'}
+        assert self.data.qflag[99] == {'C03', 'D01', 'D02', 'D03', 'D10'}
+        assert self.data.qflag[136] == {'D03', 'D04', 'D05'}
+        assert self.data.qflag[636] == {'G'}
+        np.testing.assert_almost_equal(self.data.deriv1[58], -5.551115123125783e-17)
+        np.testing.assert_almost_equal(self.data.deriv2[29], -6.200000000000003)
+        assert len(self.data.keys()) == 34
+        assert type(df) == pd.DataFrame
+        assert len(df) == 696
+        assert len(df.keys()) == 7
+        assert df[df['soil_moisture'].isna()].index[0] == pd.Timestamp('2017-02-19 15:00:00', freq='H')
 
+    def test_check_C01(self) -> None:
+        """
+        Test flag C01
+        """
+        self.iface.run(name='C01')
+        assert self.data.qflag[30] == {'C01'}
+        assert self.data.qflag[31] == set()
 
-def reset_qflags():
-    df['qflag'] = df.qflag.apply(lambda x: set())
+    def test_check_C02(self) -> None:
+        """
+        Test flag C02
+        """
+        self.iface.run(name='C02')
+        assert self.data.qflag[70] == {'C02'}
+        assert self.data.qflag[69] == set()
 
+    def test_check_C03(self) -> None:
+        """
+        Test flag C03
+        """
+        self.iface.run(name='C03')
+        assert self.data.qflag[80] == {'C03'}
+        assert self.data.qflag[79] == set()
 
-def test_check_c01():
-    reset_qflags()
-    assert df.soil_moisture[10] == 5.1
-    assert df.index[2] == pd.Timestamp('2017-01-27 02:00:00'), 'Error reading data'
-    flag.flag_c01(df)
-    assert df.qflag[30] == {1}
-    assert df.qflag[31] == set()
+    def test_check_D01(self) -> None:
+        """
+        Test flag D01
+        """
+        self.iface.run(name='D01')
+        assert self.data.qflag[35] == {'D01'}
+        assert self.data.qflag[136] == set()
 
+    def test_check_D02(self) -> None:
+        """
+        Test flag D02
+        """
+        self.iface.run(name='D02')
+        assert self.data.qflag[2] == {'D02'}
+        assert self.data.qflag[62] == set()
 
-def test_check_c02():
-    flag.flag_c02(df)
-    assert df.qflag[70] == {2}
-    assert df.qflag[69] == set()
+    def test_check_D03(self) -> None:
+        """
+        Test flag D03
+        """
+        self.iface.run(name='D03')
+        assert self.data.qflag[70] == {'D03'}
+        assert self.data.qflag[636] == set()
+        assert self.data.qflag[0] == {'D03'}
 
+    def test_check_D04(self) -> None:
+        """
+        Test flag D04
+        """
+        self.iface.run(name='D04')
+        assert self.data.qflag[70] == {'D04'}
+        assert self.data.qflag[71] == set()
 
-def test_check_c03():
-    flag.flag_c03(df, 42.7)
-    assert df.qflag[80] == {3}
-    assert df.qflag[79] == set()
+    def test_check_D05(self) -> None:
+        """
+        Test flag D05
+        """
+        self.iface.run(name='D05')
+        assert self.data.qflag[70] == {'D05'}
+        assert self.data.qflag[636] == set()
 
+    def test_check_D06(self) -> None:
+        """
+        Test flag D06
+        """
+        self.iface.run(name='D06')
+        np.testing.assert_almost_equal(self.data.deriv1[58], -5.551115123125783e-17)
+        np.testing.assert_almost_equal(self.data.deriv2[29], -6.200000000000003)
+        assert self.data.qflag[30] == {'D06'}
+        assert self.data.qflag[29] == set()
 
-def test_check_d01():
-    flag.flag_d01(df)
-    assert df.qflag[35] == {4}
-    assert df.qflag[136] == set()
+    def test_check_D07_D08_D09(self) -> None:
+        """
+        Test flags D07, D08 and D09
+        """
+        self.iface.run(name=['D07', 'D09'])
+        assert self.data.qflag[40] == {'D09', 'D07'}
+        assert self.data.qflag[80] == {'D08'}
+        assert self.data.qflag[61] == set()
+        assert self.data.qflag[41] == {'D09'}
+        assert self.data.qflag[39] == set()
 
+    def test_check_D10(self) -> None:
+        """
+        Test flag D10
+        """
+        self.iface.run(name='D10')
+        assert self.data.qflag[99] == {'D10'}
+        assert self.data.qflag[75] == set()
 
-def test_check_d02():
-    reset_qflags()
-    flag.flag_d02(df)
-    assert df.qflag[2] == {5}
-    assert df.qflag[62] == set()
-
-
-def test_check_d03():
-    reset_qflags()
-    flag.flag_d03(df)
-    assert df.qflag[70] == {6}
-    assert df.qflag[636] == set()
-    assert df.qflag[0] == {6}
-
-
-def test_check_d04():
-    reset_qflags()
-    flag.flag_d04(df)
-    assert df.qflag[70] == {7}
-    assert df.qflag[71] == set()
-
-
-def test_check_d05():
-    reset_qflags()
-    flag.flag_d05(df)
-    assert df.qflag[70] == {8}
-    assert df.qflag[636] == set()
-
-
-def test_check_d06():
-    flag.apply_savgol(df)
-    flag.flag_d06(df)
-    np.testing.assert_almost_equal(df.deriv1[58], -5.551115123125783e-17)
-    np.testing.assert_almost_equal(df.deriv2[29], -6.200000000000003)
-    assert df.qflag[30] == {9}
-    assert df.qflag[29] == set()
-
-
-def test_check_d07():
-    flag.flag_d07(df)
-    assert df.qflag[40] == {10}
-    assert df.qflag[41] == set()
-    assert df.qflag[60] == {11}
-    assert df.qflag[61] == set()
-
-
-def test_check_d09():
-    flag.flag_d09(df)
-    assert df.qflag[41] == {12}
-    assert df.qflag[39] == set()
-
-
-def test_check_d10():
-    flag.flag_d10(df)
-    assert df.qflag[99] == {13}
-    assert df.qflag[75] == set()
-
-
-def test_check_good():
-    flag.flag_g(df)
-    assert df.qflag[3] == {14}
+    def test_check_good(self) -> None:
+        """
+        Test flag "good"
+        """
+        self.iface.run(name='G')
+        assert self.data.qflag[3] == {'G'}
 
 
 if __name__ == '__main__':
-    test_run_flags()
-    test_check_c01()
-    test_check_c02()
-    test_check_c03()
-    test_check_d01()
-    test_check_d02()
-    test_check_d03()
-    test_check_d04()
-    test_check_d05()
-    test_check_d06()
-    test_check_d07()
-    test_check_d09()
-    test_check_d10()
-    test_check_good()
+    unittest.main()
