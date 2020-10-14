@@ -1,5 +1,5 @@
-============
-Contributors
-============
+==========
+Developers
+==========
 
-* Daniel Aberer <daniel.aberer@tuwien.ac.at>
+* Daniel Aberer <daniel.aberer@geo.tuwien.ac.at>
