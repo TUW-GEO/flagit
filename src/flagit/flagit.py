@@ -119,8 +119,9 @@ class Interface(object):
         self.apply_savgol()
         flags_dict = {'C01': self.flag_C01, 'C02': self.flag_C02, 'C03': self.flag_C03, 'D01': self.flag_D01,
                       'D02': self.flag_D02, 'D03': self.flag_D03, 'D04': self.flag_D04, 'D05': self.flag_D05,
-                      'D06': self.flag_D06, 'D07': self.flag_D07, 'D08': self.flag_D08, 'D09': self.flag_D09,
-                      'D10': self.flag_D10, 'G': self.flag_G}
+                      'D06': self.flag_D06, 'D07': self.flag_D07, 'D09': self.flag_D09, 'D10': self.flag_D10,
+                      'G': self.flag_G}
+
 
         if name is not None:
             if type(name) == list:
@@ -478,6 +479,7 @@ class Interface(object):
 
         if type(self.data.index) == pd.core.indexes.datetimes.DatetimeIndex:
             self.data = self.data.resample('H').asfreq()
+
 
 
     def flag_D10(self):
