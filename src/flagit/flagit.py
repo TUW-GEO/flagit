@@ -25,7 +25,7 @@ import numpy as np
 from scipy.signal import savgol_filter as savgol
 from functools import reduce
 import warnings
-from src.flagit.settings import Variables
+from flagit.settings import Variables
 
 
 class FormatError(Exception):

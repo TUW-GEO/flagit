@@ -2,8 +2,7 @@ name: flagit
 channels:
   - conda-forge
 dependencies:
-  - python
-  - pytest
   - numpy
   - scipy
   - pandas
+  - pytest
