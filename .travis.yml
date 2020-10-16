@@ -26,7 +26,7 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda env create -n flagit python=${TRAVIS_PYTHON_VERSION}
+  - conda create -n flagit python=${TRAVIS_PYTHON_VERSION}
   - conda env update -f environment.yml -n flagit
   - source activate flagit
 
