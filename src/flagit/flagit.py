@@ -44,7 +44,7 @@ class Interface(object):
     one of three main categories: C (exceeding plausible geophysical range), D (questionable/dubious) or G (good).
     For a detailed description of the algorithms please see: Dorigo, W. A., Xaver, A., Vreugdenhil, M., Gruber, A.,
     Hegyiova, A., Sanchis-Dufau, A. D., ... & Drusch, M. (2013). Global automated quality control of in situ soil
-    moisture data from the International Soil Moisture Network. Vadose Zone Journal, 12(3).
+    moisture data from the International Soil Moisture Network. Vadose Zone Journal, 12(3), doi:10.2136/vzj2012.0097.
 
     Parameters
     ----------
@@ -55,7 +55,7 @@ class Interface(object):
             At ISMN the saturation point is calculated from Harmonized World Soil Database (HWSD) sand, clay and organic
             content for each station using Equations [2,3,5] from Saxton & Rawls (2006).
             (Saxton, K. E., & Rawls, W. J. (2006). Soil water characteristic estimates by texture and organic matter for
-            hydrologic solutions. Soil science society of America Journal, 70(5), 1569-1578.)
+            hydrologic solutions. Soil science society of America Journal, 70(5), 1569-1578. doi:10.2136/sssaj2005.0117)
 
     Raises
     ------
@@ -86,11 +86,11 @@ class Interface(object):
                               '"soil_temperature", "air_temperature", "precipitation", "gldas_soil_temperature", '
                               '"gldas_precipitation"')
 
-        if 'qflag' not in self.data.columns:
-            self.data['qflag'] = len(self.data) * [set()]
+        self.data['qflag'] = data.soil_moisture.apply(lambda x: set())
 
         if not pd.infer_freq(self.data.index) == 'H':
             warnings.warn('ISMN automated quality control were developed for hourly data.')
+
 
     def run(self, name=None, sat_point=None) -> pd.DataFrame:
         """
@@ -150,9 +150,9 @@ class Interface(object):
                         'constant values following negative break', 'saturated plateaus', 'good']
 
         titles = ['code', 'description']
-        data = [titles] + list(zip(names, description))
+        table_create = [titles] + list(zip(names, description))
 
-        for i, d in enumerate(data):
+        for i, d in enumerate(table_create):
             line = ' | '.join(str(x).ljust(4) for x in d)
             print(line)
             if i == 0:
@@ -191,7 +191,7 @@ class Interface(object):
         Soil moisture above saturation point:
         Flags when soil moisture is above saturation point.
         At ISMN the saturation point is calculated from Harmonized World Soil Database (HWSD) sand, clay and organic
-        content for each station using Equations [2,3,5] from Saxton & Rawls (2006).
+        content for each station using Equations [2,3,5] from Saxton & Rawls (2006). doi:10.2136/vzj2012.0097.
         """
         if not self.sat_point:
             return

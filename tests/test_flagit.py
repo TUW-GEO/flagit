@@ -8,11 +8,11 @@ import unittest
 class TestInterface(unittest.TestCase):
     def setUp(self):
         """
-        Read pandas.DataFrame from file and setting up of interface object
+        Read pandas.DataFrame from CSV file and setting up of interface object
         """
         self.ancillary_path = os.path.join(os.path.dirname(__file__))
-        self.data = pd.read_pickle(os.path.join(self.ancillary_path,
-                                                './test_data/test_DataFrame.pkl'))
+        self.data = pd.read_csv(os.path.join(self.ancillary_path,
+                                                './test_data/test_dataframe.csv'), index_col='utc', parse_dates=True)
         self.iface = flagit.Interface(data=self.data, sat_point=42.7)
 
     def test_init(self) -> None:
@@ -29,7 +29,7 @@ class TestInterface(unittest.TestCase):
         """
         df = self.iface.run()
         assert self.data.soil_moisture[10] == 5.1
-        assert self.data.index[2] == pd.Timestamp('2017-01-27 02:00:00'), 'Error reading data'
+        assert self.data.index[2] == pd.Timestamp('2020-01-27 02:00:00'), 'Error reading data'
         assert self.data.qflag[30] == {'C01', 'D01', 'D02', 'D03', 'D06'}
         assert self.data.qflag[40] == {'D01', 'D02', 'D03', 'D07', 'D09'}
         assert self.data.qflag[62] == {'D01', 'D03'}
@@ -44,7 +44,7 @@ class TestInterface(unittest.TestCase):
         assert type(df) == pd.DataFrame
         assert len(df) == 696
         assert len(df.keys()) == 7
-        assert df[df['soil_moisture'].isna()].index[0] == pd.Timestamp('2017-02-19 15:00:00', freq='H')
+        assert df[df['soil_moisture'].isna()].index[0] == pd.Timestamp('2020-02-19 15:00:00', freq='H')
 
     def test_check_C01(self) -> None:
         """
@@ -146,6 +146,8 @@ class TestInterface(unittest.TestCase):
         """
         self.iface.run(name='G')
         assert self.data.qflag[3] == {'G'}
+        assert len(np.unique(self.data.qflag)) == 1
+
 
 
 if __name__ == '__main__':
