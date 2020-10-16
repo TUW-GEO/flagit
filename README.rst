@@ -2,6 +2,17 @@
 flagit
 ======
 
+.. image:: https://travis-ci.org/TUW-GEO/flagit.svg?branch=master
+    :target: https://travis-ci.org/TUW-GEO/flagit
+
+.. image:: https://coveralls.io/repos/github/TUW-GEO/flagit/badge.svg?branch=master
+    :target: https://coveralls.io/github/TUW-GEO/flagit?branch=master
+
+.. image:: https://badge.fury.io/py/flagit.svg
+    :target: http://badge.fury.io/py/flagit
+
+.. image:: https://readthedocs.org/projects/flagit/badge/?version=latest
+   :target: http://flagit.readthedocs.org/
 
 ISMN quality control procedures for in situ soil moisture observations
 
