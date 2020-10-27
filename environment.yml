@@ -5,4 +5,7 @@ dependencies:
   - numpy
   - scipy
   - pandas
-  - pytest
+  - pip
+  - pip:
+    - pytest-cov
+    - pytest
