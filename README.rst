@@ -27,34 +27,31 @@ If you use the software in a publication then please cite:
 Installation
 ============
 
-This package should be installable through pip:
+For installation we recommend `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_. So please install it according to the official instructions. As soon 
+as the ``conda`` command is available in your shell you can continue:
+
+.. code:: python
+
+    conda install -c conda-forge pandas scipy numpy
+
+This following command will install the flagit pip package:
 
 .. code:: python
 
     pip install flagit
 
-Example installation script
----------------------------
-
-The following script will install miniconda and setup the environment on a UNIX
-like system. Miniconda will be installed into ``$HOME/miniconda``.
+To create a full development environment with conda, the environment.yml file in this repository can be used:
 
 .. code:: python
 
-   wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-   bash miniconda.sh -b -p $HOME/miniconda
-   export PATH="$HOME/miniconda/bin:$PATH"
-   git clone git@github.com:TUW-GEO/flagit.git flagit
-   cd flagit
-   conda env create -f environment.yml
-   source activate flagit
-
-This script adds ``$HOME/miniconda/bin`` temporarily to the ``PATH`` to do this
-permanently add ``export PATH="$HOME/miniconda/bin:$PATH"`` to your ``.bashrc``
-or ``.zshrc``
-
-The last line in the example activates the ``flagit`` environment.
-
+    git clone git@github.com:TUW-GEO/flagit.git flagit
+    cd flagit
+    conda create -n flagit python=3.7 # or any supported python version
+    conda activate flagit
+    conda env update -f environment.yml -n flagit
+    python setup.py develop
+    
+   
 After that you should be able to run:
 
 .. code:: python
@@ -66,10 +63,10 @@ to run the test suite.
 Description
 ===========
 
-The International Soil Moisture Network (ISMN) quality control procedures are used to detect implausible and dubious 
-measurements in hourly situ soil moisture time series. When downloading data at ISMN (https://ismn.geo.tuwien.ac.at) 
-all variable-data are provided with additional tags in column "qflag", which can be one of three main categories: C
-(exceeding plausible geophysical range), D (questionable/dubious) or G (good).
+The `International Soil Moisture Network (ISMN) <https://ismn.geo.tuwien.ac.at>`_ quality control procedures are used to detect implausible and dubious 
+measurements in hourly situ soil moisture time series. When downloading data at ISMN all variable-data are provided 
+with additional tags in column "qflag", which can be one of three main categories: C (exceeding plausible geophysical range), 
+D (questionable/dubious) or G (good).
 
 +------+-------------------------------------------------------+-------------------------------------+
 | code | description                                           | ancillary data required             |
@@ -110,23 +107,14 @@ ancillary requirements.
 
 We hope to update the functionality of this package to facilitate the inclusion of ancillary data.
 
-For a detailed description of the quality control procedures see: Dorigo, W.A. , Xaver, A. Vreugdenhil, M. Gruber, A., Hegyiova, A. Sanchis-Dufau, A.D., Zamojski, D. , Cordes, C., Wagner, W., and Drusch, M. (2013). Global Automated Quality Control of In situ Soil Moisture data from the International Soil Moisture Network. Vadose Zone Journal, 12, 3, doi:10.2136/vzj2012.0097
+For a detailed description of the quality control procedures see paper on `Global Automated quality control <https://www.geo.tuwien.ac.at/downloads/wd/journal/Dorigo2013_VZJ_QC_ISMN.pdf>`_.
 
 Contribute
 ==========
 
-We are happy if you want to contribute. Please raise an issue explaining what
+We would be happy if you would like to contribute. Please raise an issue explaining what
 is missing or if you find a bug. We will also gladly accept pull requests
 against our master branch for new features or bug fixes.
-
-Development setup
------------------
-
-For Development we also recommend a ``conda`` environment. You can create one
-including test dependencies and debugger by running
-``conda env create -f environment.yml``. This will create a new
-``ismn`` environment which you can activate by using
-``source activate ismn``.
 
 Guidelines
 ----------

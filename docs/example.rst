@@ -26,33 +26,30 @@ As Input a pandas.DataFrame of the following format is required:
 | 2017-01-27 06:00:00 | 5.0           | -4.5             | -8.9            | 0.0           | -9.4                   | 0.0                 |
 +---------------------+---------------+------------------+-----------------+---------------+------------------------+---------------------+
 
-
 .. code:: python
 
-    from src.flagit import flagit
+    from flagit import flagit
     import pandas as pd
-
 
 .. code:: python
 
     # read from CSV file
-    file_path = "/path_to_dataframe/dataframe/data.csv"
-    df = pd.read_csv(file_path, sep=',', index_col='utc', parse_dates=True)
-
+    file_path = '/path_to_dataframe/*.csv'
+    df = pd.read_csv(file_path, index_col='utc', parse_dates=True)
 
 .. code:: python
 
-    # initialize interface
-    flag = Interface(df)
+    # initialize interface and run all flagging procedures
+    flag = flagit.Interface(df)
     result_df = flag.run(sat_point = 42.7)
 
-    # optional: choose only specific procedures by providing a list or string as name:
+    # alternatively: choose only specific procedures by providing a list or string as name:
+    flag = flagit.Interface(df)
     result_df = flag.run(name = ['D06', 'D07', 'D09'])
     result_df = flag.run(name = 'C01')
-
 
 .. code:: python
 
     # get flag-descriptions
-    flag = Interface(df)
+    flag = flagit.Interface(df)
     flag.get_flag_description()
