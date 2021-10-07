@@ -97,9 +97,6 @@ class Interface(object):
             self.data['qflag'] = data.soil_moisture.apply(lambda x: set())
             self.variable = 'soil_moisture'
 
-        if not pd.infer_freq(self.data.index) == 'H':
-            warnings.warn('ISMN automated quality control were developed for hourly data.')
-
 
     def run(self, name=None, sat_point=None, depth_from=None, flag_numbers=False) -> pd.DataFrame:
         """
@@ -116,6 +113,9 @@ class Interface(object):
                 and organic content for each station using Equations [2,3,5] from Saxton & Rawls (2006).
                 (Saxton, K. E., & Rawls, W. J. (2006). Soil water characteristic estimates by texture and organic matter
                 for hydrologic solutions. Soil science society of America Journal, 70(5), 1569-1578.)
+        depth_from : Decimal
+                Used to calculate minimum precipitation necessary to consitute a rain event for flags D04 and D05.
+                Also used to skip sensor depths >=10cm for D04 and D05 (applied to surface soil moisture sensors only).
         flag_numbers : bool
                 if true flag numbers are used as tags in the qflag column instead of flag ids (e.g.: '1' instead of
                 'C01', '14' instead of 'G')
@@ -297,16 +297,17 @@ class Interface(object):
         tag : string or int, optional
         code added to qflag-column when flag-criteria are met
         """
-
         if 'precipitation' in self.data.columns:
+            min_precipitation = t.ancillary_p_min
 
             if self.depth_from != None:
-                min_precipitation = float(self.depth_from) * 0.05 * 0.5 * 1000
-            if not min_precipitation:
-                min_precipitation = t.ancillary_p_min
+                if self.depth_from >= 0.1:
+                    return
+                if self.depth_from != 0:
+                    min_precipitation = float(self.depth_from) * 0.05 * 0.5 * 1000
+
             self.data['total_precipitation'] = round(self.data['precipitation']
                                                      .rolling(min_periods=1, window=24).sum(), 1)
-
             self.data['std_x2'] = self.data['soil_moisture'].rolling(min_periods=1, window=25).std() * 2
             self.data['rise24h'] = self.data['soil_moisture'].diff(24)
             self.data['rise1h'] = self.data['soil_moisture'].diff(1)
@@ -333,6 +334,12 @@ class Interface(object):
 
         if 'gldas_precipitation' in self.data.columns:
             min_precipitation = t.ancillary_p_min
+
+            if self.depth_from != None:
+                if self.depth_from >= 0.1:
+                    return
+                if self.depth_from != 0:
+                    min_precipitation = float(self.depth_from) * 0.05 * 0.5 * 1000
 
             self.data['gldas_total_precipitation'] = self.data['gldas_precipitation'].rolling(min_periods=1,
                                                                                               window=24).sum()
@@ -530,10 +537,13 @@ class Interface(object):
 
         # When sm == 0 for >12h => the mean equals 0 => relative variance is therefore calculated as nan
         # To catch periods of sm=0 after a sm-drop to zero (D07 criteria 4): reset these nan-values to 0
-        self.data['hit'] = self.data[self.data['rel_var'].isna() & (self.data['soil_moisture'] == 0)] = 0.0
+        self.data['rel_var'][self.data['rel_var'].isna() & (self.data['soil_moisture'] == 0)] = 0.0
 
         # find where there is a drop in soil moisture (flag D07) and a period of low relative variance
-        self.data['event'] = ((self.data['qflag'].astype(str)).str.contains('D07') & (self.data['rel_var'] < 0.001))
+        flag_D07 = 'D07'
+        if type(tag) == int:
+            flag_D07 = 10
+        self.data['event'] = ((self.data['qflag'].astype(str)).str.contains(str(flag_D07)) & (self.data['rel_var'] < 0.001))
         self.data['event'].replace(np.nan, 0, inplace=True)
         self.data['event'] = self.data['event'].astype(int)
 
@@ -673,9 +683,6 @@ class Interface(object):
                     index.extend(Plateau.index)
 
         self.data['qflag'][index].apply(lambda x: x.add(tag))
-
-        # if type(self.data.index) == pd.core.indexes.datetimes.DatetimeIndex:
-        #     self.data = self.data.resample('H').asfreq()
 
 
     def flag_G(self, tag):
