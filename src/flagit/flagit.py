@@ -297,7 +297,7 @@ class Interface(object):
         tag : string or int, optional
         code added to qflag-column when flag-criteria are met
         """
-        if 'precipitation' in self.data.columns:
+        if 'precipitation' in self.data.columns or 'total_precipitation' in self.data.columns:
             min_precipitation = t.ancillary_p_min
 
             if self.depth_from != None:
@@ -305,9 +305,10 @@ class Interface(object):
                     return
                 if self.depth_from != 0:
                     min_precipitation = float(self.depth_from) * 0.05 * 0.5 * 1000
-
-            self.data['total_precipitation'] = round(self.data['precipitation']
-                                                     .rolling(min_periods=1, window=24).sum(), 1)
+            
+            if not 'total_precipitation' in self.data.columns:
+                self.data['total_precipitation'] = round(self.data['precipitation']
+                                                         .rolling(min_periods=1, window=24).sum(), 1)
             self.data['std_x2'] = self.data['soil_moisture'].rolling(min_periods=1, window=25).std() * 2
             self.data['rise24h'] = self.data['soil_moisture'].diff(24)
             self.data['rise1h'] = self.data['soil_moisture'].diff(1)
@@ -340,7 +341,7 @@ class Interface(object):
                     return
                 if self.depth_from != 0:
                     min_precipitation = float(self.depth_from) * 0.05 * 0.5 * 1000
-
+            
             self.data['gldas_total_precipitation'] = self.data['gldas_precipitation'].rolling(min_periods=1,
                                                                                               window=24).sum()
             self.data['gl_std_x2'] = self.data['soil_moisture'].rolling(min_periods=1, window=25).std() * 2
