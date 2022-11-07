@@ -12,7 +12,7 @@ class Variables():
         Lower threshold for quality control
         units:
         soil moisture : m³/m³
-        soil temperature, air temperture, soil surface temperature : degree Celsius
+        soil temperature, air temperture, surface temperature : degree Celsius
         precipitation, snow water equivalent, snow depth : mm
         soil suction : kPa
 
@@ -22,7 +22,7 @@ class Variables():
         variable name (some examples are:  soil_moisture, soil_temperature, snow_water_equivalent)
         """
         low_boundary_dict = {'soil_moisture': 0, 'soil_temperature': -60, 'air_temperature': -60, 'precipitation': 0,
-                          'soil_surface_temperature': -60, 'soil_suction': 0, 'snow_water_equivalent': 0, 'snow_depth':
+                          'surface_temperature': -60, 'soil_suction': 0, 'snow_water_equivalent': 0, 'snow_depth':
                           0}
         return low_boundary_dict[var]
         
@@ -31,7 +31,7 @@ class Variables():
         Upper threshold for quality control
         units:
         soil moisture : m³/m³
-        soil temperature, air temperture, soil surface temperature : degree Celsius
+        soil temperature, air temperture, surface temperature : degree Celsius
         precipitation, snow water equivalent, snow depth : mm
         soil suction : kPa
 
@@ -41,7 +41,7 @@ class Variables():
         variable name (some examples are:  soil_moisture, soil_temperature, snow_water_equivalent)
         """
         hi_boundary_dict = {'soil_moisture': 60, 'soil_temperature': 60, 'air_temperature': 60, 'precipitation': 100,
-                          'soil_surface_temperature': 60, 'soil_suction': 2500, 'snow_water_equivalent': 10000, 
+                          'surface_temperature': 60, 'soil_suction': 2500, 'snow_water_equivalent': 10000, 
                             'snow_depth': 10000}
         return hi_boundary_dict[var]
         
