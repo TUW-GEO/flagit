@@ -11,23 +11,24 @@ class TestInterface(unittest.TestCase):
         Read pandas.DataFrame from CSV file and setting up of interface object
         """
         self.ancillary_path = os.path.join(os.path.dirname(__file__))
+
         self.data = pd.read_csv(os.path.join(self.ancillary_path,
                                                 './test_data/test_dataframe.csv'), index_col='utc', parse_dates=True)
-        self.iface = flagit.Interface(data=self.data, sat_point=42.7)
+
+        self.iface = flagit.Interface(data=self.data, sat_point=42.7, depth_from=0.09)
 
     def test_init(self) -> None:
         """
         Test if FormatError is raised
         """
-        self.data.drop(['soil_moisture'], axis=1, inplace=True)
         with self.assertRaises(flagit.FormatError):
-            flagit.Interface(data=self.data)
+            flagit.Interface(data=self.data['soil_moisture'])
 
     def test_run_flags(self) -> None:
         """
         Test application of ISMN quality control - all flags applied
         """
-        df = self.iface.run()
+        self.iface.run()
         assert self.data.soil_moisture[10] == 5.1
         assert self.data.index[2] == pd.Timestamp('2020-01-27 02:00:00'), 'Error reading data'
         assert self.data.qflag[30] == {'C01', 'D01', 'D02', 'D03', 'D06'}
@@ -40,11 +41,9 @@ class TestInterface(unittest.TestCase):
         assert self.data.qflag[636] == {'G'}
         np.testing.assert_almost_equal(self.data.deriv1[58], -5.551115123125783e-17)
         np.testing.assert_almost_equal(self.data.deriv2[29], -6.200000000000003)
-        assert len(self.data.keys()) == 34
-        assert type(df) == pd.DataFrame
-        assert len(df) == 696
-        assert len(df.keys()) == 7
-        assert df[df['soil_moisture'].isna()].index[0] == pd.Timestamp('2020-02-19 15:00:00', freq='H')
+        assert len(self.data.keys()) == 33
+        assert type(self.data) == pd.DataFrame
+        assert len(self.data) == 695
 
     def test_check_C01(self) -> None:
         """
