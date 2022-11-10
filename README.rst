@@ -22,7 +22,11 @@ Citation
 If you use the software in a publication then please cite:
 
 * Dorigo, W.A. , Xaver, A. Vreugdenhil, M. Gruber, A., Hegyiova, A. Sanchis-Dufau, A.D., Zamojski, D. , Cordes, C., Wagner, W., and Drusch, M. (2013). Global Automated Quality Control of In situ Soil Moisture data from the International Soil Moisture Network. Vadose Zone Journal, 12, 3, doi:10.2136/vzj2012.0097
-* https://github.com/TUW-GEO/flagit
+
+Please also cite the correct version of this package. Click on the badge below, select the correct version and copy the text under "Cite as".
+
+.. image:: https://zenodo.org/badge/304609951.svg
+   :target: https://zenodo.org/badge/latestdoi/304609951
 
 Installation
 ============
