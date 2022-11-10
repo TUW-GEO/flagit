@@ -46,7 +46,7 @@ To create a full development environment with conda, the environment.yml file in
 
     git clone git@github.com:TUW-GEO/flagit.git flagit
     cd flagit
-    conda create -n flagit python=3.7 # or any supported python version
+    conda create -n flagit python=3.10 # or any supported python version
     conda activate flagit
     conda env update -f environment.yml -n flagit
     python setup.py develop
@@ -121,7 +121,7 @@ Guidelines
 
 If you want to contribute please follow these steps:
 
-- Fork the ismn repository to your account
+- Fork the flagit repository to your account
 - Clone the repository
 - make a new feature branch from the flagit main branch
 - Add your feature
