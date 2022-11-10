@@ -2,11 +2,11 @@
 flagit
 ======
 
-.. image:: https://travis-ci.org/TUW-GEO/flagit.svg?branch=master
-    :target: https://travis-ci.org/TUW-GEO/flagit
+.. image:: https://github.com/TUW-GEO/flagit/workflows/Automated%20Tests/badge.svg?branch=main
+   :target: https://github.com/TUW-GEO/flagit/actions
 
-.. image:: https://coveralls.io/repos/github/TUW-GEO/flagit/badge.svg?branch=master
-    :target: https://coveralls.io/github/TUW-GEO/flagit?branch=master
+.. image:: https://coveralls.io/repos/github/TUW-GEO/flagit/badge.svg?branch=main
+    :target: https://coveralls.io/github/TUW-GEO/flagit?branch=main
 
 .. image:: https://badge.fury.io/py/flagit.svg
     :target: http://badge.fury.io/py/flagit
@@ -114,7 +114,7 @@ Contribute
 
 We would be happy if you would like to contribute. Please raise an issue explaining what
 is missing or if you find a bug. We will also gladly accept pull requests
-against our master branch for new features or bug fixes.
+against our main branch for new features or bug fixes.
 
 Guidelines
 ----------
@@ -123,11 +123,11 @@ If you want to contribute please follow these steps:
 
 - Fork the ismn repository to your account
 - Clone the repository
-- make a new feature branch from the ismn master branch
+- make a new feature branch from the flagit main branch
 - Add your feature
 - Please include tests for your contributions in one of the test directories.
   We use unittest so a simple function called test_my_feature is enough
-- submit a pull request to our master branch
+- submit a pull request to our main branch
 
 Note
 ====
