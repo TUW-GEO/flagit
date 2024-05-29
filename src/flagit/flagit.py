@@ -31,6 +31,8 @@ from flagit.settings import Variables
 class FormatError(Exception):
     pass
 
+class VariableNotKnown(Exception):
+    pass
 
 t = Variables()
 
@@ -90,7 +92,7 @@ class Interface(object):
             raise FormatError('Please provide pandas.DataFrame as data.')
 
         if 'soil_moisture' not in self.data.columns:
-            self.variable = self.data.keys()[0]
+            self.variable = self.get_variable_from_data()
             self.data['qflag'] = data[self.variable].apply(lambda x: set())
 
         else:
@@ -199,6 +201,19 @@ class Interface(object):
         """
         self.data['deriv1'] = savgol(self.data.soil_moisture, 3, 2, 1, mode='nearest')
         self.data['deriv2'] = savgol(self.data.soil_moisture, 3, 2, 2, mode='nearest')
+
+
+    def get_variable_from_data(self) -> str:
+        """
+        Gets first occuring and known Variable from the pandas dataframe
+        Returns v:string
+        -------
+
+        """
+        for v in self.data.keys():
+            if v in t.variable_list:
+                return v
+        raise VariableNotKnown
 
     def flag_C01(self, tag):
         """

@@ -6,6 +6,9 @@ class Variables():
     ancillary_ts_lower = 0
     ancillary_p_min = 0.2
     plateau_count = 0
+
+    variable_list = ['soil_moisture','soil_temperature','air_temperature','precipitation',
+                         'surface_temperature', 'soil_suction', 'snow_water_equivalent','snow_depth']
     
     def low_boundary(self, var):
         """
