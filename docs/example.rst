@@ -41,12 +41,12 @@ As Input a pandas.DataFrame of the following format is required:
 
     # initialize interface and run all flagging procedures
     flag = flagit.Interface(df)
-    result_df = flag.run(sat_point = 42.7)
+    result_df = flag.run(sat_point = 42.7) # Saturation Point in % vol
 
-    # alternatively: choose only specific procedures by providing a list or string as name:
+    # alternatively: choose only specific procedures by providing a list as name:
     flag = flagit.Interface(df)
     result_df = flag.run(name = ['D06', 'D07', 'D09'])
-    result_df = flag.run(name = 'C01')
+    result_df = flag.run(name = ['C01'])
 
 .. code:: python
 
