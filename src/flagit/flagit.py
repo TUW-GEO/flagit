@@ -31,6 +31,8 @@ from flagit.settings import Variables
 class FormatError(Exception):
     pass
 
+class VariableNotKnown(Exception):
+    pass
 
 t = Variables()
 
@@ -57,7 +59,7 @@ class Interface(object):
     data : pandas.DataFrame
         Input for Interface Object containing in situ soil moisture measurements
     sat_point : float
-            Saturation Point for soil at the respective location.
+            Saturation Point in % vol for soil at the respective location.
             At ISMN the saturation point is calculated from Harmonized World Soil Database (HWSD) sand, clay and organic
             content for each station using Equations [2,3,5] from Saxton & Rawls (2006).
             (Saxton, K. E., & Rawls, W. J. (2006). Soil water characteristic estimates by texture and organic matter for
@@ -90,7 +92,7 @@ class Interface(object):
             raise FormatError('Please provide pandas.DataFrame as data.')
 
         if 'soil_moisture' not in self.data.columns:
-            self.variable = self.data.keys()[0]
+            self.variable = self.get_variable_from_data()
             self.data['qflag'] = data[self.variable].apply(lambda x: set())
 
         else:
@@ -106,10 +108,10 @@ class Interface(object):
 
         Parameters
         ----------
-        name : string or list, optional
-            provide name of flag or list of flags to only apply these flags
+        name : list
+            provide list of flags to only apply these flags
         sat_point : float
-                Saturation Point for soil at the respective location.
+                Saturation Point in % vol for soil at the respective location.
                 At ISMN the saturation point is calculated from Harmonized World Soil Database (HWSD) sand, clay
                 and organic content for each station using Equations [2,3,5] from Saxton & Rawls (2006).
                 (Saxton, K. E., & Rawls, W. J. (2006). Soil water characteristic estimates by texture and organic matter
@@ -127,6 +129,10 @@ class Interface(object):
             DataFrame including ISMN quality flags in column "qflag".
         """
         keys = self.data.keys()
+
+        if name:
+            assert isinstance(name, (list)), "If 'name' is provided then it must be a list"
+
         if not self.sat_point:
             self.sat_point = sat_point
         if not self.depth_from:
@@ -199,6 +205,19 @@ class Interface(object):
         """
         self.data['deriv1'] = savgol(self.data.soil_moisture, 3, 2, 1, mode='nearest')
         self.data['deriv2'] = savgol(self.data.soil_moisture, 3, 2, 2, mode='nearest')
+
+
+    def get_variable_from_data(self) -> str:
+        """
+        Gets first occuring and known Variable from the pandas dataframe
+        Returns v:string
+        -------
+
+        """
+        for v in self.data.keys():
+            if v in t.variable_list:
+                return v
+        raise VariableNotKnown
 
     def flag_C01(self, tag):
         """

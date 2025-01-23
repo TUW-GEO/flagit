@@ -49,7 +49,7 @@ class TestInterface(unittest.TestCase):
         """
         Test flag C01
         """
-        self.iface.run(name='C01')
+        self.iface.run(name=['C01'])
         assert self.data.qflag[30] == {'C01'}
         assert self.data.qflag[31] == set()
 
@@ -57,7 +57,7 @@ class TestInterface(unittest.TestCase):
         """
         Test flag C02
         """
-        self.iface.run(name='C02')
+        self.iface.run(name=['C02'])
         assert self.data.qflag[70] == {'C02'}
         assert self.data.qflag[69] == set()
 
@@ -65,7 +65,7 @@ class TestInterface(unittest.TestCase):
         """
         Test flag C03
         """
-        self.iface.run(name='C03')
+        self.iface.run(name=['C03'])
         assert self.data.qflag[80] == {'C03'}
         assert self.data.qflag[79] == set()
 
@@ -73,7 +73,7 @@ class TestInterface(unittest.TestCase):
         """
         Test flag D01
         """
-        self.iface.run(name='D01')
+        self.iface.run(name=['D01'])
         assert self.data.qflag[35] == {'D01'}
         assert self.data.qflag[136] == set()
 
@@ -81,7 +81,7 @@ class TestInterface(unittest.TestCase):
         """
         Test flag D02
         """
-        self.iface.run(name='D02')
+        self.iface.run(name=['D02'])
         assert self.data.qflag[2] == {'D02'}
         assert self.data.qflag[62] == set()
 
@@ -89,7 +89,7 @@ class TestInterface(unittest.TestCase):
         """
         Test flag D03
         """
-        self.iface.run(name='D03')
+        self.iface.run(name=['D03'])
         assert self.data.qflag[70] == {'D03'}
         assert self.data.qflag[636] == set()
         assert self.data.qflag[0] == {'D03'}
@@ -98,7 +98,7 @@ class TestInterface(unittest.TestCase):
         """
         Test flag D04
         """
-        self.iface.run(name='D04')
+        self.iface.run(name=['D04'])
         assert self.data.qflag[70] == {'D04'}
         assert self.data.qflag[71] == set()
 
@@ -106,7 +106,7 @@ class TestInterface(unittest.TestCase):
         """
         Test flag D05
         """
-        self.iface.run(name='D05')
+        self.iface.run(name=['D05'])
         assert self.data.qflag[70] == {'D05'}
         assert self.data.qflag[636] == set()
 
@@ -114,7 +114,7 @@ class TestInterface(unittest.TestCase):
         """
         Test flag D06
         """
-        self.iface.run(name='D06')
+        self.iface.run(name=['D06'])
         np.testing.assert_almost_equal(self.data.deriv1[58], -5.551115123125783e-17)
         np.testing.assert_almost_equal(self.data.deriv2[29], -6.200000000000003)
         assert self.data.qflag[30] == {'D06'}
@@ -135,7 +135,7 @@ class TestInterface(unittest.TestCase):
         """
         Test flag D10
         """
-        self.iface.run(name='D10')
+        self.iface.run(name=['D10'])
         assert self.data.qflag[99] == {'D10'}
         assert self.data.qflag[75] == set()
 
@@ -143,7 +143,7 @@ class TestInterface(unittest.TestCase):
         """
         Test flag "good"
         """
-        self.iface.run(name='G')
+        self.iface.run(name=['G'])
         assert self.data.qflag[3] == {'G'}
         assert len(np.unique(self.data.qflag)) == 1
 

@@ -4,8 +4,9 @@ channels:
 dependencies:
   - numpy
   - scipy
-  - pandas
+  - pandas<3
   - pip
   - pip:
     - pytest-cov
     - pytest
+    - setuptools
