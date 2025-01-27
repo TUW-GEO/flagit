@@ -9,8 +9,9 @@ name: Automated Tests
 on:
   push:
   pull_request:
+  workflow_dispatch:
   schedule:
-    - cron: "0 11 * * 1" # Every Monday at 11 UTC
+    - cron: "0 9 * * 1" # Every Monday at 9 UTC
 
 jobs:
   build:
@@ -25,11 +26,12 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-      - uses: conda-incubator/setup-miniconda@v2.0.1
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           miniconda-version: "latest"
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
+          channel-priority: flexible
           environment-file: environment.yml
           activate-environment: flagit
           auto-activate-base: false
@@ -37,21 +39,19 @@ jobs:
         shell: bash -l {0}
         run: |
           conda info -a
-          conda list
-          pip list
           which pip
           which python
+      - name: Install base package and run tests
+        shell: bash -l {0}
+        run: |
+          pip install -e .[testing]
+          pytest  # run only basic tests, see setup.cfg
       - name: Export Environment
         shell: bash -l {0}
         run: |
-          mkdir -p .artifacts
+          mkdir -p artifacts
           filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
-          conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
-      - name: Install package and test
-        shell: bash -l {0}
-        run: |
-          pip install .
-          pytest
+          conda env export --no-builds | grep -v "prefix" > artifacts/$filename
       - name: Upload Coverage
         shell: bash -l {0}
         run: |
@@ -63,15 +63,23 @@ jobs:
       - name: Create wheel and dist package
         shell: bash -l {0}
         run: |
-          pip install setuptools_scm
-          # build dist on linux
-          python setup.py sdist --dist-dir .artifacts/dist
-          ls .artifacts/dist
+          pip install setuptools setuptools_scm wheel
+
+          # Create source distribution (sdist) and wheel distribution
+          python setup.py sdist --dist-dir artifacts/dist
+          python setup.py bdist_wheel --dist-dir artifacts/dist
+
+          # Verify the contents of the artifacts directory
+          ls artifacts/dist
+
+          # Validate the built distribution files
+          pip install twine
+          twine check artifacts/dist/*
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Artifacts
-          path: .artifacts/*
+          name: Artifacts-py${{ matrix.python-version }}-${{ matrix.os }}
+          path: artifacts/*
   coveralls:
     name: Submit Coveralls 👚
     needs: build
@@ -95,6 +103,10 @@ jobs:
           echo "GITHUB_REPOSITORY = $GITHUB_REPOSITORY"
       - name: Download Artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: Artifacts
+          pattern: Artifacts-*
+          merge-multiple: true
       - name: Display downloaded files
         run: ls -aR
       - name: Upload to PyPI

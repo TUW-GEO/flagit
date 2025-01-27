@@ -2,7 +2,7 @@
 flagit
 ======
 
-.. image:: https://github.com/TUW-GEO/flagit/workflows/Automated%20Tests/badge.svg?branch=main
+.. image:: https://github.com/TUW-GEO/flagit/actions/workflows/build.yml/badge.svg?branch=main
    :target: https://github.com/TUW-GEO/flagit/actions
 
 .. image:: https://coveralls.io/repos/github/TUW-GEO/flagit/badge.svg?branch=main
