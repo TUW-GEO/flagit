@@ -63,11 +63,17 @@ jobs:
       - name: Create wheel and dist package
         shell: bash -l {0}
         run: |
-          pip install setuptools_scm twine
-          # build dist on linux
+          pip install setuptools setuptools_scm wheel
+
+          # Create source distribution (sdist) and wheel distribution
           python setup.py sdist --dist-dir artifacts/dist
-          fi
+          python setup.py bdist_wheel --dist-dir artifacts/dist
+
+          # Verify the contents of the artifacts directory
           ls artifacts/dist
+
+          # Validate the built distribution files
+          pip install twine
           twine check artifacts/dist/*
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
