@@ -5,7 +5,7 @@ flagit
 .. image:: https://github.com/TUW-GEO/flagit/actions/workflows/build.yml/badge.svg?branch=main
    :target: https://github.com/TUW-GEO/flagit/actions
 
-.. image:: https://coveralls.io/repos/github/TUW-GEO/flagit/badge.svg?branch=main
+.. image:: https://coveralls.io/repos/github/TUW-GEO/flagit/badge.png?branch=main
     :target: https://coveralls.io/github/TUW-GEO/flagit?branch=main
 
 .. image:: https://badge.fury.io/py/flagit.svg
