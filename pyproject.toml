@@ -8,3 +8,4 @@ version_scheme = "no-guess-dev"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+addopts = "--cov=flagit --cov-report=term-missing --verbose"
