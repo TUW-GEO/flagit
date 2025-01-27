@@ -44,7 +44,7 @@ jobs:
       - name: Install base package and run tests
         shell: bash -l {0}
         run: |
-          pip install .
+          pip install -e .[testing]
           pytest  # run only basic tests, see setup.cfg
       - name: Export Environment
         shell: bash -l {0}
